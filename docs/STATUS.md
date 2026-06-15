@@ -17,21 +17,34 @@
 - Subscription entitlement helper
 - Session state scaffold
 - Feature gate scaffold
+- Auth gate scaffold
 - Currency helper
+- Supabase client shell
+- Phone login UI scaffold
+- Shop setup UI scaffold
+- Tenant setup API scaffold
+- Product type and repository scaffold
+- New Sale cart shell
+- Checkout cash/credit shell
+- Stock list and quick-add shell
 - Local SQLite schema scaffold
+- Local SQLite initializer
 - Sync queue types
+- VAT summary calculator
+- VAT repository scaffold
 - Supabase core schema migration
 - Supabase initial RLS migration
 
 ## Still needed next
 
-1. Supabase client file in Expo app.
-2. Phone login UI implementation.
-3. Shop setup form implementation.
-4. Route guards using session state.
-5. Remaining route placeholders that were blocked by connector filters.
-6. Local run with `npm install` and `npm run typecheck`.
-7. First real product/stock screens.
+1. Local run with `npm install` and `npm run typecheck`.
+2. Replace demo products with tenant product query.
+3. Persist checkout to local SQLite first, then sync.
+4. Build customer credit selection flow.
+5. Build supplier invoice capture flow.
+6. Build VAT summary screen UI from repository data.
+7. Add route placeholders that were blocked by connector filters.
+8. Add CI typecheck workflow after dependency versions are pinned.
 
 ## Known limitation
 
