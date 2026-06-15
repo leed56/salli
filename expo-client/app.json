@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "Salli",
+    "slug": "salli",
+    "scheme": "salli",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#020617"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "lk.disruptive.salli"
+    },
+    "android": {
+      "package": "lk.disruptive.salli",
+      "adaptiveIcon": {
+        "backgroundColor": "#020617"
+      }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "themeColor": "#020617",
+      "backgroundColor": "#020617"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-camera"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
