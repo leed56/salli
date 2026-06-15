@@ -1,0 +1,42 @@
+{
+  "name": "salli-expo-client",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "latest",
+    "@supabase/supabase-js": "latest",
+    "@tanstack/react-query": "latest",
+    "expo": "latest",
+    "expo-camera": "latest",
+    "expo-image-manipulator": "latest",
+    "expo-linking": "latest",
+    "expo-router": "latest",
+    "expo-sharing": "latest",
+    "expo-splash-screen": "latest",
+    "expo-sqlite": "latest",
+    "expo-status-bar": "latest",
+    "i18next": "latest",
+    "nativewind": "latest",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-i18next": "latest",
+    "react-native": "latest",
+    "react-native-reanimated": "latest",
+    "react-native-safe-area-context": "latest",
+    "react-native-screens": "latest",
+    "react-native-web": "latest",
+    "zustand": "latest"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "typescript": "latest"
+  }
+}
