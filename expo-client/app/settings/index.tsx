@@ -1,10 +1,14 @@
-import { PlaceholderScreen } from "@/components/ui/PlaceholderScreen";
+import { DemoModuleScreen } from "@/components/web/WebDemoShell";
 
 export default function SettingsScreen() {
   return (
-    <PlaceholderScreen
+    <DemoModuleScreen
       title="Settings"
-      description="Shop profile, language, tax details, app preferences, and account settings will live here."
+      description="Manage shop profile, language, plan, VAT details, and safe permissions."
+      metricLabel="Current plan"
+      metricValue="Pro preview"
+      actionLabel="Open staff settings"
+      tone="amber"
     />
   );
 }
