@@ -8,49 +8,19 @@ type CreateShopInput = {
 };
 
 export async function createShop(input: CreateShopInput) {
-  const userResult = await supabaseClient.auth.getUser();
-  const userId = userResult.data.user?.id;
-
-  if (!userId) {
-    return { error: new Error("You must sign in before creating a shop.") };
-  }
-
-  const tenantResult = await supabaseClient
-    .from("tenants")
-    .insert({
-      name: input.name,
-      vat_number: input.vatNumber || null,
-      quarter_start_month: input.quarterStartMonth,
-      language: input.language,
-    })
-    .select("id")
-    .single();
-
-  if (tenantResult.error || !tenantResult.data) {
-    return { error: tenantResult.error ?? new Error("Shop creation failed.") };
-  }
-
-  const tenantId = tenantResult.data.id;
-
-  const memberResult = await supabaseClient.from("tenant_members").insert({
-    tenant_id: tenantId,
-    user_id: userId,
-    role: "owner",
+  // Tenant, owner membership and the trial subscription are created atomically
+  // by a SECURITY DEFINER function (see migration 003) so first-time onboarding
+  // is not blocked by the owner-only RLS write policies.
+  const { data, error } = await supabaseClient.rpc("create_tenant_with_owner", {
+    p_name: input.name,
+    p_vat_number: input.vatNumber ?? "",
+    p_quarter_start_month: input.quarterStartMonth,
+    p_language: input.language,
   });
 
-  if (memberResult.error) {
-    return { error: memberResult.error };
+  if (error) {
+    return { error };
   }
 
-  const subscriptionResult = await supabaseClient.from("subscriptions").insert({
-    tenant_id: tenantId,
-    plan: "free",
-    status: "trial",
-  });
-
-  if (subscriptionResult.error) {
-    return { error: subscriptionResult.error };
-  }
-
-  return { data: { tenantId } };
+  return { data: { tenantId: data as string } };
 }
