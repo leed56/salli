@@ -54,6 +54,21 @@ See `README.md` and `docs/` for product/architecture context.
   rendering; real values needed for auth). After changing these, redeploy with `--force` so the
   static export is rebuilt (values bake in at export time, and Vercel may otherwise reuse a cache).
 
+### Supabase backend
+- Migrations live in `supabase/migrations/` and must be applied in order: `001` (schema),
+  `002` (RLS), `003` (onboarding RPC). The app's `EXPO_PUBLIC_SUPABASE_URL`/`ANON_KEY` point at
+  the project; the same values must be set in the Vercel project env.
+- Applying migrations from this VM: connect via the Supabase **pooler** (host
+  `*.pooler.supabase.com`, port `6543`). The direct host (`db.<ref>.supabase.co:5432`) is
+  IPv6-only and unreachable from the VM. There is no `psql`; use Node `pg`.
+- Onboarding goes through the `create_tenant_with_owner()` SECURITY DEFINER RPC (migration 003),
+  not direct table inserts — the base RLS only allows existing owners to write, which deadlocks
+  first-time setup.
+- Auth: `SessionSync` (root layout) bridges any Supabase session into `appSession`, so it is
+  auth-method agnostic. Note the project may have the **phone provider disabled** and **email
+  confirmation on** by default; enable the phone provider + an SMS provider (or email auth) for
+  real login through the UI.
+
 ### Known gotchas
 - NativeWind on the **dev server** can show a brief unstyled first paint (FOUC) that a refresh
   fixes; the static export (`npx expo export`) inlines the CSS so production is styled on first load.
