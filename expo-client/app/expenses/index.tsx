@@ -1,10 +1,14 @@
-import { PlaceholderScreen } from "@/components/ui/PlaceholderScreen";
+import { DemoModuleScreen } from "@/components/web/WebDemoShell";
 
 export default function ExpensesScreen() {
   return (
-    <PlaceholderScreen
+    <DemoModuleScreen
       title="Expenses"
-      description="Simple expense entry, categories, notes, and period summaries will live here."
+      description="Record shop expenses, petty cash, categories, and claimable VAT without accounting jargon."
+      metricLabel="This month expenses"
+      metricValue="LKR 42,800"
+      actionLabel="Add expense"
+      tone="amber"
     />
   );
 }
