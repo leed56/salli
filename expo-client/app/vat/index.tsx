@@ -6,7 +6,7 @@ import { FeatureGate } from "@/components/auth/FeatureGate";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { PremiumCard } from "@/components/ui/PremiumCard";
 import { Screen } from "@/components/ui/Screen";
-import { fetchLocalVatSummary, type LocalVatSummary } from "@/features/vat/localVatRepository";
+import { fetchVatMeterSummary, type VatMeterSummary } from "@/features/vat/supabaseVatRepository";
 import { formatLkr } from "@/lib/currency";
 import { useAppSession } from "@/stores/appSession";
 
@@ -27,7 +27,7 @@ function formatUpdatedAt(value: string) {
 
 export default function VatScreen() {
   const { shopId } = useAppSession();
-  const [summary, setSummary] = useState<LocalVatSummary | null>(null);
+  const [summary, setSummary] = useState<VatMeterSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,11 +41,11 @@ export default function VatScreen() {
     setError(null);
 
     try {
-      const nextSummary = await fetchLocalVatSummary(shopId);
+      const nextSummary = await fetchVatMeterSummary(shopId);
       setSummary(nextSummary);
     } catch (loadError) {
-      console.error("load local VAT failed", loadError);
-      setError("Could not load local VAT summary.");
+      console.error("load VAT failed", loadError);
+      setError("Could not load VAT summary.");
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +74,7 @@ export default function VatScreen() {
             </View>
 
             {error ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{error}</Text> : null}
-            {isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading local VAT...</Text> : null}
+            {isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading VAT...</Text> : null}
 
             {summary ? (
               <>
@@ -110,8 +110,8 @@ export default function VatScreen() {
                 <PremiumCard eyebrow="Confidence" title={confidenceLabel} description={confidenceCopy} tone={summary.purchaseCount > 0 ? "teal" : "rose"}>
                   <View className="gap-3">
                     <View className="flex-row items-center justify-between rounded-2xl bg-slate-950/50 p-4">
-                      <Text className="text-base font-bold text-salli-muted">Local data status</Text>
-                      <Text className="text-base font-black text-salli-teal">Offline ready</Text>
+                      <Text className="text-base font-bold text-salli-muted">Data status</Text>
+                      <Text className="text-base font-black text-salli-teal">Synced</Text>
                     </View>
                     <View className="flex-row items-center justify-between rounded-2xl bg-slate-950/50 p-4">
                       <Text className="text-base font-bold text-salli-muted">Updated</Text>

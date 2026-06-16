@@ -1,18 +1,39 @@
 import { router } from "expo-router";
+import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { AuthGate } from "@/components/auth/AuthGate";
 import { Screen } from "@/components/ui/Screen";
+import { createSale } from "@/features/sales/saleRepository";
 import { formatLkr } from "@/lib/currency";
+import { useAppSession } from "@/stores/appSession";
 import { useCartStore } from "@/stores/cartStore";
 
 export default function CartScreen() {
+  const { shopId } = useAppSession();
   const { items, totals, clear } = useCartStore();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  function completeCheckout(method: "cash" | "credit") {
-    console.log("Checkout selected", { method, items, totals });
+  async function completeCheckout(method: "cash" | "credit") {
+    if (!shopId || items.length === 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+
+    const { error } = await createSale(shopId, { paymentType: method, items });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setMessage("Could not complete sale. Please try again.");
+      return;
+    }
+
     clear();
-    router.replace("/");
+    router.replace("/vat");
   }
 
   return (
@@ -54,20 +75,26 @@ export default function CartScreen() {
 
           <View className="gap-3">
             <Pressable
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isSubmitting}
               onPress={() => completeCheckout("cash")}
               className="min-h-14 items-center justify-center rounded-2xl bg-salli-amber px-5"
             >
-              <Text className="text-lg font-bold text-slate-950">Complete cash sale</Text>
+              <Text className="text-lg font-bold text-slate-950">
+                {isSubmitting ? "Saving..." : "Complete cash sale"}
+              </Text>
             </Pressable>
 
             <Pressable
-              disabled={items.length === 0}
+              disabled={items.length === 0 || isSubmitting}
               onPress={() => completeCheckout("credit")}
               className="min-h-14 items-center justify-center rounded-2xl bg-salli-rose px-5"
             >
-              <Text className="text-lg font-bold text-slate-950">Complete credit sale</Text>
+              <Text className="text-lg font-bold text-slate-950">
+                {isSubmitting ? "Saving..." : "Complete credit sale"}
+              </Text>
             </Pressable>
+
+            {message ? <Text className="text-base font-bold text-salli-rose">{message}</Text> : null}
           </View>
         </View>
       </AuthGate>

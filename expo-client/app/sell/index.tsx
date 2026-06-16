@@ -1,19 +1,40 @@
 import { Link } from "expo-router";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { AuthGate } from "@/components/auth/AuthGate";
 import { Screen } from "@/components/ui/Screen";
+import { listProducts } from "@/features/products/productRepository";
+import { buildCartItem } from "@/features/sales/saleRepository";
+import type { Product } from "@/features/products/types";
 import { formatLkr } from "@/lib/currency";
+import { useAppSession } from "@/stores/appSession";
 import { useCartStore } from "@/stores/cartStore";
 
-const demoProducts = [
-  { id: "demo-rice", name: "Rice 5kg", price: 1850, vat: 0 },
-  { id: "demo-milk", name: "Milk powder", price: 1240, vat: 189.15 },
-  { id: "demo-soap", name: "Soap", price: 180, vat: 27.46 },
-];
-
 export default function SellScreen() {
+  const { shopId } = useAppSession();
   const { items, totals, addItem, removeItem } = useCartStore();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    if (!shopId) {
+      setIsLoading(false);
+      return;
+    }
+    listProducts(shopId)
+      .then((next) => {
+        if (active) setProducts(next);
+      })
+      .catch(() => undefined)
+      .finally(() => {
+        if (active) setIsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
 
   return (
     <Screen>
@@ -29,25 +50,24 @@ export default function SellScreen() {
           </View>
 
           <View className="gap-3">
-            {demoProducts.map((product) => (
-              <Pressable
-                key={product.id}
-                onPress={() =>
-                  addItem({
-                    productId: product.id,
-                    name: product.name,
-                    qty: 1,
-                    unitPrice: product.price,
-                    vatAmount: product.vat,
-                    lineTotal: product.price,
-                  })
-                }
-                className="min-h-16 rounded-3xl bg-salli-card p-5"
-              >
-                <Text className="text-xl font-bold text-salli-text">{product.name}</Text>
-                <Text className="mt-1 text-base text-salli-muted">{formatLkr(product.price)}</Text>
-              </Pressable>
-            ))}
+            {isLoading ? (
+              <Text className="rounded-3xl bg-salli-card p-5 text-base text-salli-muted">Loading products...</Text>
+            ) : products.length === 0 ? (
+              <Text className="rounded-3xl bg-salli-card p-5 text-base text-salli-muted">
+                No products yet. Add products in Stock first.
+              </Text>
+            ) : (
+              products.map((product) => (
+                <Pressable
+                  key={product.id}
+                  onPress={() => addItem(buildCartItem(product))}
+                  className="min-h-16 rounded-3xl bg-salli-card p-5"
+                >
+                  <Text className="text-xl font-bold text-salli-text">{product.name}</Text>
+                  <Text className="mt-1 text-base text-salli-muted">{formatLkr(product.sellPrice)}</Text>
+                </Pressable>
+              ))
+            )}
           </View>
 
           <View className="rounded-[32px] bg-salli-card p-5">
