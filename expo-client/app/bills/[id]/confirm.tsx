@@ -11,12 +11,19 @@ import { confirmBillDraft, getBillDraftById } from "@/features/bills/billReposit
 import { formatLkr } from "@/lib/currency";
 import { useAppSession } from "@/stores/appSession";
 
+type StockChange = {
+  productId: string;
+  name: string;
+  qtyAdded: number;
+};
+
 export default function BillConfirmScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { shopId } = useAppSession();
   const [draft, setDraft] = useState<BillDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedPurchaseId, setSavedPurchaseId] = useState<string | null>(null);
+  const [stockChanges, setStockChanges] = useState<StockChange[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -44,6 +51,7 @@ export default function BillConfirmScreen() {
     try {
       const result = await confirmBillDraft(draft, shopId);
       setSavedPurchaseId(result.purchaseId);
+      setStockChanges(result.stockChanges);
     } catch (error) {
       console.error("save bill failed", error);
       setSaveError("Could not save this bill. Please try again.");
@@ -85,7 +93,7 @@ export default function BillConfirmScreen() {
                 </View>
               </PremiumCard>
 
-              <PremiumCard eyebrow="Detected items" title={`${draft.lines.length} stock rows`} description="Each confirmed line will increase stock later." tone="slate">
+              <PremiumCard eyebrow="Detected items" title={`${draft.lines.length} stock rows`} description="Each confirmed line increases local stock immediately." tone="slate">
                 <View className="gap-3">
                   {draft.lines.map((line) => (
                     <View key={line.id} className="rounded-2xl bg-slate-950/50 p-4">
@@ -131,17 +139,25 @@ export default function BillConfirmScreen() {
                 </PremiumCard>
               ) : null}
 
-              <PremiumCard title={savedPurchaseId ? "Saved offline" : "Confirm purchase"} description={savedPurchaseId ? "Purchase, item rows, and sync queue item were created locally." : "Save the bill locally first, then sync it when the shop is online."} tone={savedPurchaseId ? "teal" : "slate"}>
+              <PremiumCard title={savedPurchaseId ? "Saved offline" : "Confirm purchase"} description={savedPurchaseId ? "Purchase, stock, input VAT, and sync queue were updated locally." : "Save the bill locally first, then sync it when the shop is online."} tone={savedPurchaseId ? "teal" : "slate"}>
                 <View className="gap-3">
                   {saveError ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{saveError}</Text> : null}
                   {savedPurchaseId ? (
-                    <Text className="rounded-2xl bg-salli-teal/10 p-4 text-base font-bold text-salli-text">
-                      Ready for sync • {savedPurchaseId}
-                    </Text>
+                    <View className="rounded-2xl bg-salli-teal/10 p-4">
+                      <Text className="text-base font-bold text-salli-text">Ready for sync • {savedPurchaseId}</Text>
+                      <Text className="mt-2 text-sm font-bold text-salli-teal">{stockChanges.length} stock rows applied</Text>
+                    </View>
                   ) : null}
+                  {stockChanges.map((change) => (
+                    <View key={change.productId} className="flex-row items-center justify-between rounded-2xl bg-slate-950/50 p-4">
+                      <Text className="flex-1 text-base font-bold text-salli-text">{change.name}</Text>
+                      <Text className="text-lg font-black text-salli-teal">+{change.qtyAdded}</Text>
+                    </View>
+                  ))}
                   <PremiumButton onPress={handleConfirm} disabled={isSaving || Boolean(savedPurchaseId)}>
                     {isSaving ? "Saving..." : savedPurchaseId ? "Bill saved" : "Confirm bill"}
                   </PremiumButton>
+                  <PremiumButton tone="dark" onPress={() => router.push("/stock")}>View stock</PremiumButton>
                   <PremiumButton tone="dark" onPress={() => router.push("/")}>Back to home</PremiumButton>
                 </View>
               </PremiumCard>
