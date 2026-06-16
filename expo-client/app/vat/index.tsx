@@ -94,7 +94,7 @@ export default function VatScreen() {
                 </PremiumCard>
 
                 <View className="gap-3">
-                  <PremiumCard eyebrow="Sales" title={formatLkr(summary.outputVat)} description={`${summary.salesCount} local sales included.`} tone="teal">
+                  <PremiumCard eyebrow="Sales" title={formatLkr(summary.outputVat)} description={`${summary.salesCount} sales included.`} tone="teal">
                     <Text className="text-base leading-6 text-salli-muted">VAT collected from customers through sales.</Text>
                   </PremiumCard>
 

@@ -20,14 +20,16 @@ See `README.md` and `docs/` for product/architecture context.
   - `metro.config.js` registers the `.wasm` asset extension so `expo-sqlite`'s web build
     (`wa-sqlite.wasm`) resolves. Without it, web bundling fails because Expo Router's
     `require.context` pulls every route (including the SQLite-backed `app/vat/index.tsx`).
-- **Browser-safe vs native-only routes:** Most screens under `app/` are browser-safe demo
-  screens built from `src/components/web/WebDemoShell.tsx` (pure inline styles) — e.g. Home
-  (`app/index.tsx`), `bills`, `credit`, `reports`, `customers`, `expenses`, `dayclose`,
-  `suppliers`, `settings`, `staff`. Routes such as `app/vat`, `app/sell`, `app/stock`,
-  `app/login`, `app/onboarding` are native-first (use `expo-sqlite`, NativeWind `className`,
-  `AuthGate`/Supabase) and may error or render blank on web until the documented Phase 0
-  foundational work lands. Demonstrate web functionality via the browser-safe screens
-  (e.g. Home -> Add supplier bill -> Review bill).
+- **Working (Supabase-backed) vs demo-only routes:** `app/login`, `app/onboarding`, `app/stock`,
+  `app/sell` (+ `app/sell/cart`), and `app/vat` are wired to Supabase and work on web (email
+  auth, shop creation, product catalogue, sale persistence, real VAT meter). The Home screen
+  (`app/index.tsx`) and `bills`, `credit`, `reports`, `customers`, `expenses`, `dayclose`,
+  `suppliers`, `settings`, `staff` are still browser-safe **demo** screens built from
+  `src/components/web/WebDemoShell.tsx` (inline styles, hardcoded numbers) — not yet wired to data.
+- Some repos under `src/features/**` still have local-SQLite variants (`localProductRepository`,
+  `localVatRepository`, `db/local/*`) used by the original offline-first design; the live screens
+  now use the Supabase repositories instead (`productRepository`, `saleRepository`,
+  `supabaseVatRepository`). expo-sqlite still does not work on web without extra Metro/headers setup.
 - **Env file:** the Supabase client (`src/lib/supabaseClient.ts`) is imported by the
   native/auth routes. Create `expo-client/.env` from `.env.example` (it is git-ignored).
   Placeholder values (e.g. `EXPO_PUBLIC_SUPABASE_URL=https://placeholder.supabase.co`) are
