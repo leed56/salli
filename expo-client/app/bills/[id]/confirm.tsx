@@ -9,12 +9,15 @@ import { Screen } from "@/components/ui/Screen";
 import type { BillDraft } from "@/features/bills/billModel";
 import { confirmBillDraft, getBillDraftById } from "@/features/bills/billRepository";
 import { formatLkr } from "@/lib/currency";
+import { useAppSession } from "@/stores/appSession";
 
 export default function BillConfirmScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
+  const { shopId } = useAppSession();
   const [draft, setDraft] = useState<BillDraft | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [savedPurchaseId, setSavedPurchaseId] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadDraft() {
@@ -30,14 +33,23 @@ export default function BillConfirmScreen() {
   }, [id]);
 
   async function handleConfirm() {
-    if (!draft) {
+    if (!draft || !shopId) {
+      setSaveError("Shop setup is required before saving bills.");
       return;
     }
 
     setIsSaving(true);
-    const result = await confirmBillDraft(draft);
-    setSavedPurchaseId(result.purchaseId);
-    setIsSaving(false);
+    setSaveError(null);
+
+    try {
+      const result = await confirmBillDraft(draft, shopId);
+      setSavedPurchaseId(result.purchaseId);
+    } catch (error) {
+      console.error("save bill failed", error);
+      setSaveError("Could not save this bill. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   }
 
   return (
@@ -119,8 +131,14 @@ export default function BillConfirmScreen() {
                 </PremiumCard>
               ) : null}
 
-              <PremiumCard title={savedPurchaseId ? "Saved" : "Confirm purchase"} description={savedPurchaseId ? "Stock and input VAT scaffold finished for this demo bill." : "Save action currently logs the purchase scaffold only."} tone={savedPurchaseId ? "teal" : "slate"}>
+              <PremiumCard title={savedPurchaseId ? "Saved offline" : "Confirm purchase"} description={savedPurchaseId ? "Purchase, item rows, and sync queue item were created locally." : "Save the bill locally first, then sync it when the shop is online."} tone={savedPurchaseId ? "teal" : "slate"}>
                 <View className="gap-3">
+                  {saveError ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{saveError}</Text> : null}
+                  {savedPurchaseId ? (
+                    <Text className="rounded-2xl bg-salli-teal/10 p-4 text-base font-bold text-salli-text">
+                      Ready for sync • {savedPurchaseId}
+                    </Text>
+                  ) : null}
                   <PremiumButton onPress={handleConfirm} disabled={isSaving || Boolean(savedPurchaseId)}>
                     {isSaving ? "Saving..." : savedPurchaseId ? "Bill saved" : "Confirm bill"}
                   </PremiumButton>
