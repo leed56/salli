@@ -47,3 +47,13 @@ See `README.md` and `docs/` for product/architecture context.
   logged-in team member; disable it in Project Settings -> Deployment Protection to share
   preview/PR links publicly. The production alias is public.
 - A `VERCEL_TOKEN` is needed for non-interactive CLI deploys; pass it via `--token`.
+- **Build-time env (`EXPO_PUBLIC_*`):** Expo inlines these into the web bundle only when
+  referenced **statically** (`process.env.EXPO_PUBLIC_FOO`); dynamic `process.env[key]` access
+  is NOT replaced and is empty on web. The Vercel project must have
+  `EXPO_PUBLIC_SUPABASE_URL` / `EXPO_PUBLIC_SUPABASE_ANON_KEY` set (placeholders are fine for
+  rendering; real values needed for auth). After changing these, redeploy with `--force` so the
+  static export is rebuilt (values bake in at export time, and Vercel may otherwise reuse a cache).
+
+### Known gotchas
+- NativeWind on the **dev server** can show a brief unstyled first paint (FOUC) that a refresh
+  fixes; the static export (`npx expo export`) inlines the CSS so production is styled on first load.
