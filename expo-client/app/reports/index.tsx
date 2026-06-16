@@ -1,10 +1,14 @@
-import { PlaceholderScreen } from "@/components/ui/PlaceholderScreen";
+import { DemoModuleScreen } from "@/components/web/WebDemoShell";
 
 export default function ReportsScreen() {
   return (
-    <PlaceholderScreen
+    <DemoModuleScreen
       title="Reports"
-      description="Owner-only business summaries and export actions will live here."
+      description="Simple owner reports for sales, stock, VAT, credit, and profit views."
+      metricLabel="Today sales"
+      metricValue="LKR 156,200"
+      actionLabel="View sales report"
+      tone="teal"
     />
   );
 }
