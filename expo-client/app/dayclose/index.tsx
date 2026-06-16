@@ -1,10 +1,14 @@
-import { PlaceholderScreen } from "@/components/ui/PlaceholderScreen";
+import { DemoModuleScreen } from "@/components/web/WebDemoShell";
 
 export default function DayCloseScreen() {
   return (
-    <PlaceholderScreen
+    <DemoModuleScreen
       title="Day close"
-      description="Expected cash, counted cash, variance notes, and daily close status will live here."
+      description="Count cash, compare sales, note differences, and close the shop day safely."
+      metricLabel="Expected cash"
+      metricValue="LKR 128,400"
+      actionLabel="Start day close"
+      tone="teal"
     />
   );
 }
