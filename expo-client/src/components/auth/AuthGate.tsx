@@ -9,7 +9,15 @@ type AuthGateProps = PropsWithChildren<{
 }>;
 
 export function AuthGate({ children, requireSetup = true }: AuthGateProps) {
-  const { userId, setupDone } = useAppSession();
+  const { userId, setupDone, hydrated } = useAppSession();
+
+  if (!hydrated) {
+    return (
+      <View className="rounded-3xl bg-salli-card p-5">
+        <Text className="text-base text-salli-muted">Loading your session...</Text>
+      </View>
+    );
+  }
 
   if (!userId) {
     return (

@@ -12,7 +12,6 @@ import { useAppSession } from "@/stores/appSession";
  */
 export function SessionSync() {
   const update = useAppSession((state) => state.update);
-  const clear = useAppSession((state) => state.clear);
 
   useEffect(() => {
     let active = true;
@@ -22,7 +21,7 @@ export function SessionSync() {
 
       const userId = session?.user?.id ?? null;
       if (!userId) {
-        clear();
+        update({ userId: null, shopId: null, setupDone: false, hydrated: true });
         return;
       }
 
@@ -38,14 +37,15 @@ export function SessionSync() {
             role: membership.role,
             plan: membership.plan,
             setupDone: true,
+            hydrated: true,
           });
         } else {
-          update({ shopId: null, setupDone: false });
+          update({ shopId: null, setupDone: false, hydrated: true });
         }
       } catch {
         // Keep the user signed in even if membership lookup fails; shop setup
         // gating will simply treat setup as incomplete.
-        if (active) update({ shopId: null, setupDone: false });
+        if (active) update({ shopId: null, setupDone: false, hydrated: true });
       }
     }
 
@@ -62,7 +62,7 @@ export function SessionSync() {
       active = false;
       data.subscription.unsubscribe();
     };
-  }, [update, clear]);
+  }, [update]);
 
   return null;
 }
