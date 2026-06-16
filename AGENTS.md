@@ -64,10 +64,12 @@ See `README.md` and `docs/` for product/architecture context.
 - Onboarding goes through the `create_tenant_with_owner()` SECURITY DEFINER RPC (migration 003),
   not direct table inserts — the base RLS only allows existing owners to write, which deadlocks
   first-time setup.
-- Auth: `SessionSync` (root layout) bridges any Supabase session into `appSession`, so it is
-  auth-method agnostic. Note the project may have the **phone provider disabled** and **email
-  confirmation on** by default; enable the phone provider + an SMS provider (or email auth) for
-  real login through the UI.
+- Auth: login uses **email/password** (`app/login.tsx`, no SMS needed). `SessionSync` (root
+  layout) bridges the Supabase session into `appSession`. After sign-in the app routes to
+  `/onboarding` (no shop) or `/`; after `createShop` it routes to `/`.
+- The project has **email confirmation enabled**, so brand-new sign-ups must confirm via email
+  before they can sign in. To test without email access, either seed a pre-confirmed user
+  (set `auth.users.email_confirmed_at`) or disable "Confirm email" in Supabase Auth settings.
 
 ### Known gotchas
 - NativeWind on the **dev server** can show a brief unstyled first paint (FOUC) that a refresh
