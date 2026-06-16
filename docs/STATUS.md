@@ -40,20 +40,23 @@
 - Local purchase and purchase item tables
 - Confirmed bill local save scaffold
 - Confirmed bill sync queue scaffold
+- Confirmed bill stock increase scaffold
+- Local product repository
+- Stock screen local database read
+- Stock screen local product add with sync queue
 - Supabase core schema migration
 - Supabase initial RLS migration
 
 ## Still needed next
 
 1. Local run with `npm install` and `npm run typecheck`.
-2. Replace demo products with tenant product query.
-3. Persist checkout to local SQLite first, then sync.
-4. Connect confirmed purchase rows to stock quantity updates.
+2. Persist checkout to local SQLite first, then sync.
+3. Build VAT summary screen UI from local sales, purchases, and expenses.
+4. Replace remaining demo sale products with tenant/local product query.
 5. Build customer credit selection flow.
-6. Build VAT summary screen UI from repository data.
-7. Add real bill image capture and Edge Function extraction.
-8. Add route placeholders that were blocked by connector filters.
-9. Add CI typecheck workflow after dependency versions are pinned.
+6. Add real bill image capture and Edge Function extraction.
+7. Add route placeholders that were blocked by connector filters.
+8. Add CI typecheck workflow after dependency versions are pinned.
 
 ## Known limitation
 
