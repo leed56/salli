@@ -97,7 +97,9 @@ export default function BillsScreen() {
               </View>
 
               <View className="mt-5">
-                <PremiumButton onPress={() => router.push(`/bills/${draft.id}/confirm`)}>Review and confirm</PremiumButton>
+                <PremiumButton onPress={() => router.push({ pathname: "/bills/[id]/confirm", params: { id: draft.id } })}>
+                  Review and confirm
+                </PremiumButton>
               </View>
             </PremiumCard>
           ) : null}
