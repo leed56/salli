@@ -46,6 +46,9 @@ export default function HomeScreen() {
                 {dashboard.daysLeftInQuarter} days left in this quarter. This number updates after every sale and confirmed supplier bill.
               </Text>
             </View>
+            <Link href="/vat" className="mt-5 rounded-2xl bg-salli-teal px-5 py-4 text-center text-lg font-black text-slate-950">
+              Open VAT meter
+            </Link>
           </PremiumCard>
 
           <View className="grid gap-3 md:grid-cols-2">
