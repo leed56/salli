@@ -121,6 +121,7 @@ export function DemoModuleScreen({
   metricLabel,
   metricValue,
   actionLabel,
+  actionHref = "/",
   tone = "teal",
 }: {
   title: string;
@@ -128,6 +129,7 @@ export function DemoModuleScreen({
   metricLabel: string;
   metricValue: string;
   actionLabel: string;
+  actionHref?: string;
   tone?: "teal" | "amber" | "rose";
 }) {
   return (
@@ -138,7 +140,7 @@ export function DemoModuleScreen({
         <Text style={{ color: "#94A3B8", fontSize: 14, lineHeight: 21 }}>
           Browser-safe demo screen. Real Supabase and offline storage can be connected after the preview flow is stable.
         </Text>
-        <ActionLink href="/" label={actionLabel} />
+        <ActionLink href={actionHref} label={actionLabel} />
       </Card>
       <BackHome />
     </PhoneShell>
