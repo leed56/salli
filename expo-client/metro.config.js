@@ -1,4 +1,5 @@
 const { getDefaultConfig } = require("expo/metro-config");
+const { withNativeWind } = require("nativewind/metro");
 
 const config = getDefaultConfig(__dirname);
 
@@ -6,4 +7,5 @@ const config = getDefaultConfig(__dirname);
 // must treat as a resolvable asset, otherwise web bundling fails to resolve it.
 config.resolver.assetExts.push("wasm");
 
-module.exports = config;
+// NativeWind v4 compiles Tailwind classes via Metro using ./global.css as input.
+module.exports = withNativeWind(config, { input: "./global.css" });

@@ -1,3 +1,4 @@
+import "../global.css";
 import "../src/styles/global";
 
 import { Stack } from "expo-router";
