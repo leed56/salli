@@ -14,6 +14,6 @@ export async function createBillDraftFromImage(): Promise<BillDraft> {
   return demoBillDraft;
 }
 
-export async function confirmBillDraft(draft: BillDraft, tenantId: string): Promise<{ purchaseId: string }> {
+export async function confirmBillDraft(draft: BillDraft, tenantId: string) {
   return saveBillDraftLocally({ tenantId, draft });
 }
