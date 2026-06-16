@@ -36,3 +36,14 @@ See `README.md` and `docs/` for product/architecture context.
 - **Dependencies:** many `package.json` entries are pinned to `latest`. `package-lock.json`
   is committed to keep installs reproducible; prefer `npx expo install <pkg>` when adding deps
   so versions stay compatible with the installed Expo SDK.
+
+### Vercel (web deploy)
+- `vercel.json` (repo root) drives the deploy: it builds the static Expo web export
+  (`expo-client/dist`) and sets `cleanUrls: true` (needed so nested routes such as
+  `/bills/confirm`, exported as `bills/confirm.html`, resolve on direct load/refresh).
+- Linked project: `nexuserp/salli`. Deploy with the CLI: production = `npx vercel deploy --prod
+  --scope nexuserp` (public domain `salli-eight.vercel.app`); omit `--prod` for a preview.
+- **Preview deployments are gated by Vercel Deployment Protection (HTTP 401)** unless you're a
+  logged-in team member; disable it in Project Settings -> Deployment Protection to share
+  preview/PR links publicly. The production alias is public.
+- A `VERCEL_TOKEN` is needed for non-interactive CLI deploys; pass it via `--token`.
