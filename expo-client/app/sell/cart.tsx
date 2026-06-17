@@ -1,10 +1,11 @@
 import { router } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, Text, View } from "react-native";
 
 import { AuthGate } from "@/components/auth/AuthGate";
 import { Screen } from "@/components/ui/Screen";
 import { createSale } from "@/features/sales/saleRepository";
+import { listCustomers, type Customer } from "@/features/customers/customerRepository";
 import { formatLkr } from "@/lib/currency";
 import { useAppSession } from "@/stores/appSession";
 import { useCartStore } from "@/stores/cartStore";
@@ -12,18 +13,42 @@ import { useCartStore } from "@/stores/cartStore";
 export default function CartScreen() {
   const { shopId } = useAppSession();
   const { items, totals, clear } = useCartStore();
+  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [customerId, setCustomerId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!shopId) return;
+    listCustomers(shopId)
+      .then((next) => {
+        if (active) setCustomers(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
 
   async function completeCheckout(method: "cash" | "credit") {
     if (!shopId || items.length === 0) {
       return;
     }
 
+    if (method === "credit" && !customerId) {
+      setMessage("Select a customer for a credit sale.");
+      return;
+    }
+
     setIsSubmitting(true);
     setMessage(null);
 
-    const { error } = await createSale(shopId, { paymentType: method, items });
+    const { error } = await createSale(shopId, {
+      paymentType: method,
+      items,
+      customerId: method === "credit" ? customerId : null,
+    });
 
     setIsSubmitting(false);
 
@@ -71,6 +96,30 @@ export default function CartScreen() {
             <Row label="Subtotal" value={formatLkr(totals.subtotal)} />
             <Row label="VAT" value={formatLkr(totals.vatAmount)} />
             <Row label="Total" value={formatLkr(totals.total)} strong />
+          </View>
+
+          <View className="rounded-[32px] bg-salli-card p-5">
+            <Text className="text-base font-bold text-salli-text">Bill to (for credit sale)</Text>
+            <View className="mt-3 gap-2">
+              {customers.length === 0 ? (
+                <Text className="text-base text-salli-muted">No customers yet. Add one in Customers to sell on credit.</Text>
+              ) : (
+                customers.map((customer) => {
+                  const selected = customer.id === customerId;
+                  return (
+                    <Pressable
+                      key={customer.id}
+                      onPress={() => setCustomerId(selected ? null : customer.id)}
+                      className={`min-h-12 justify-center rounded-2xl px-4 py-3 ${selected ? "bg-salli-teal" : "bg-slate-950"}`}
+                    >
+                      <Text className={selected ? "text-base font-bold text-slate-950" : "text-base text-salli-text"}>
+                        {customer.name}
+                      </Text>
+                    </Pressable>
+                  );
+                })
+              )}
+            </View>
           </View>
 
           <View className="gap-3">

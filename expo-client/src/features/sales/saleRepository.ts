@@ -31,16 +31,18 @@ export function buildCartItem(
 
 export async function createSale(
   shopId: string,
-  draft: { paymentType: "cash" | "credit"; items: CartItem[] },
+  draft: { paymentType: "cash" | "credit"; items: CartItem[]; customerId?: string | null },
 ) {
   const totals = calculateSaleTotals(draft.items);
 
-  // Recorded via a SECURITY DEFINER RPC so the sale, its items, and product
-  // stock decrements happen atomically (and so cashiers, who cannot write the
-  // owner-only products table directly, can still record sales).
+  // Recorded via a SECURITY DEFINER RPC so the sale, its items, product stock
+  // decrements, and (for credit) the customer balance update happen atomically
+  // (and so cashiers, who cannot write the owner-only products table directly,
+  // can still record sales).
   const { data, error } = await supabaseClient.rpc("record_sale", {
     p_tenant_id: shopId,
     p_payment_type: draft.paymentType,
+    p_customer_id: draft.customerId ?? null,
     p_subtotal: totals.subtotal,
     p_vat_amount: totals.vatAmount,
     p_total: totals.total,
