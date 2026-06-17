@@ -1,34 +1,232 @@
-import { Text, View } from "react-native";
+import { useEffect, useState } from "react";
+import { router } from "expo-router";
+import { Pressable, Text, TextInput, View } from "react-native";
 
-import { ActionLink, BackHome, Card, Metric, PageHeader, PhoneShell, money } from "@/components/web/WebDemoShell";
+import { AuthGate } from "@/components/auth/AuthGate";
+import { PremiumButton } from "@/components/ui/PremiumButton";
+import { PremiumCard } from "@/components/ui/PremiumCard";
+import { Screen } from "@/components/ui/Screen";
+import {
+  computePurchaseTotals,
+  createPurchase,
+  type PurchaseLineInput,
+} from "@/features/bills/supabasePurchaseRepository";
+import { listSuppliers, type Supplier } from "@/features/suppliers/supplierRepository";
+import { formatLkr } from "@/lib/currency";
+import { effectiveVatRate, useAppSession } from "@/stores/appSession";
 
 export default function SupplierBillsScreen() {
+  const { shopId, vatEnabled, vatRate } = useAppSession();
+  const rate = effectiveVatRate({ vatEnabled, vatRate });
+  const [supplier, setSupplier] = useState("");
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [supplierId, setSupplierId] = useState<string | null>(null);
+  const [onCredit, setOnCredit] = useState(false);
+  const [name, setName] = useState("");
+  const [qty, setQty] = useState("1");
+  const [cost, setCost] = useState("");
+  const [lines, setLines] = useState<PurchaseLineInput[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!shopId) return;
+    listSuppliers(shopId)
+      .then((next) => {
+        if (active) setSuppliers(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
+
+  const totals = computePurchaseTotals(lines, rate);
+
+  function addLine() {
+    const qtyValue = Number(qty);
+    const costValue = Number(cost);
+    if (!name.trim() || !Number.isFinite(qtyValue) || qtyValue <= 0 || !Number.isFinite(costValue)) {
+      return;
+    }
+
+    setLines((current) => [...current, { name: name.trim(), qty: qtyValue, unitCost: costValue }]);
+    setName("");
+    setQty("1");
+    setCost("");
+  }
+
+  async function confirmBill() {
+    if (!shopId || lines.length === 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setMessage(null);
+
+    const linked = suppliers.find((item) => item.id === supplierId);
+    const { error } = await createPurchase(shopId, {
+      supplierName: linked?.name ?? supplier.trim(),
+      supplierId,
+      onCredit: onCredit && !!supplierId,
+      lines,
+      rate,
+    });
+
+    setIsSubmitting(false);
+
+    if (error) {
+      setMessage("Could not save supplier bill. Please try again.");
+      return;
+    }
+
+    setLines([]);
+    setSupplier("");
+    setSupplierId(null);
+    setOnCredit(false);
+    router.replace("/vat");
+  }
+
   return (
-    <PhoneShell>
-      <PageHeader
-        title="Supplier bills"
-        description="Capture supplier bills, increase stock, and record input VAT for owner review."
-        badge="AI bill capture"
-      />
+    <Screen>
+      <AuthGate>
+        <View className="gap-6">
+          <View>
+            <Text className="text-sm font-black uppercase tracking-[4px] text-salli-teal">Supplier bills</Text>
+            <Text className="mt-2 text-4xl font-black text-salli-text">Add supplier bill</Text>
+            <Text className="mt-3 text-base leading-7 text-salli-muted">
+              Record what you bought. Input VAT from confirmed bills reduces the VAT you owe.
+            </Text>
+          </View>
 
-      <Card>
-        <View style={{ gap: 4 }}>
-          <Text style={{ color: "#94A3B8", fontSize: 13, fontWeight: "800" }}>Demo bill</Text>
-          <Text style={{ color: "#F8FAFC", fontSize: 22, fontWeight: "900" }}>Ceylon Wholesale Traders</Text>
-          <Text style={{ color: "#94A3B8", fontSize: 14 }}>18 items - input VAT detected</Text>
+          <PremiumCard eyebrow="Supplier" title="Bill details" description="Add the supplier and each line on the bill." tone="teal">
+            <View className="gap-3">
+              <TextInput
+                value={supplier}
+                onChangeText={setSupplier}
+                editable={!supplierId}
+                placeholder="Supplier name"
+                placeholderTextColor="#64748B"
+                className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+              />
+
+              {suppliers.length > 0 ? (
+                <View className="gap-2">
+                  <Text className="text-sm font-semibold text-salli-muted">Link to a supplier (for credit)</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {suppliers.map((item) => {
+                      const selected = item.id === supplierId;
+                      return (
+                        <Pressable
+                          key={item.id}
+                          onPress={() => {
+                            const next = selected ? null : item.id;
+                            setSupplierId(next);
+                            if (next) setSupplier(item.name);
+                            else setOnCredit(false);
+                          }}
+                          className={`rounded-2xl px-4 py-2 ${selected ? "bg-salli-teal" : "bg-slate-950"}`}
+                        >
+                          <Text className={selected ? "font-bold text-slate-950" : "text-salli-text"}>{item.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  {supplierId ? (
+                    <Pressable
+                      onPress={() => setOnCredit((value) => !value)}
+                      className="min-h-14 flex-row items-center justify-between rounded-2xl bg-slate-950 px-4"
+                    >
+                      <Text className="text-base text-salli-text">Pay later (add to supplier balance)</Text>
+                      <View className={`h-7 w-12 justify-center rounded-full px-1 ${onCredit ? "bg-salli-teal" : "bg-slate-700"}`}>
+                        <View className={`h-5 w-5 rounded-full bg-white ${onCredit ? "self-end" : "self-start"}`} />
+                      </View>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+
+              <TextInput
+                value={name}
+                onChangeText={setName}
+                placeholder="Item name"
+                placeholderTextColor="#64748B"
+                className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+              />
+              <View className="flex-row gap-3">
+                <TextInput
+                  value={qty}
+                  onChangeText={setQty}
+                  keyboardType="decimal-pad"
+                  placeholder="Qty"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+                <TextInput
+                  value={cost}
+                  onChangeText={setCost}
+                  keyboardType="decimal-pad"
+                  placeholder="Unit cost"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+              </View>
+              <PremiumButton tone="dark" onPress={addLine}>Add line</PremiumButton>
+            </View>
+          </PremiumCard>
+
+          <PremiumCard eyebrow="Bill" title="Lines" description={`${lines.length} line(s) on this bill.`} tone="slate">
+            <View className="gap-3">
+              {lines.length === 0 ? (
+                <Text className="rounded-2xl bg-slate-950/50 p-4 text-base leading-6 text-salli-muted">
+                  No lines yet. Add the items from the supplier bill above.
+                </Text>
+              ) : (
+                lines.map((line, index) => (
+                  <View key={`${line.name}-${index}`} className="flex-row justify-between gap-3 rounded-2xl bg-slate-950/50 p-4">
+                    <Text className="flex-1 text-base text-salli-text">
+                      {line.qty} x {line.name}
+                    </Text>
+                    <Text className="font-bold text-salli-text">{formatLkr(line.unitCost * line.qty)}</Text>
+                  </View>
+                ))
+              )}
+
+              <View className="mt-2 border-t border-slate-700 pt-4">
+                <Row label="Subtotal" value={formatLkr(totals.subtotal)} />
+                <Row label="Input VAT" value={formatLkr(totals.vatAmount)} amber />
+                <Row label="Bill total" value={formatLkr(totals.total)} strong />
+              </View>
+
+              <PremiumButton onPress={confirmBill} disabled={isSubmitting || lines.length === 0}>
+                {isSubmitting ? "Saving..." : "Confirm supplier bill"}
+              </PremiumButton>
+
+              {message ? <Text className="text-base font-bold text-salli-rose">{message}</Text> : null}
+            </View>
+          </PremiumCard>
         </View>
+      </AuthGate>
+    </Screen>
+  );
+}
 
-        <Metric label="Bill total" value={money(186450)} />
-        <Metric label="Input VAT" value={money(28442)} tone="amber" />
-
-        <Text style={{ color: "#94A3B8", fontSize: 14, lineHeight: 21 }}>
-          This browser preview avoids camera, AuthGate, Supabase, and SQLite so the route stays stable on web.
-        </Text>
-
-        <ActionLink href="/bills/confirm" label="Review bill" />
-      </Card>
-
-      <BackHome />
-    </PhoneShell>
+function Row({ label, value, strong = false, amber = false }: { label: string; value: string; strong?: boolean; amber?: boolean }) {
+  return (
+    <View className="flex-row justify-between py-1">
+      <Text className={strong ? "text-lg font-bold text-salli-text" : "text-base text-salli-muted"}>{label}</Text>
+      <Text
+        className={
+          strong
+            ? "text-lg font-bold text-salli-teal"
+            : amber
+              ? "text-base font-bold text-salli-amber"
+              : "text-base text-salli-text"
+        }
+      >
+        {value}
+      </Text>
+    </View>
   );
 }

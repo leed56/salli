@@ -5,7 +5,7 @@ import { AuthGate } from "@/components/auth/AuthGate";
 import { PremiumButton } from "@/components/ui/PremiumButton";
 import { PremiumCard } from "@/components/ui/PremiumCard";
 import { Screen } from "@/components/ui/Screen";
-import { listLocalProducts, addLocalProduct } from "@/features/products/localProductRepository";
+import { listProducts, addProduct } from "@/features/products/productRepository";
 import type { Product } from "@/features/products/types";
 import { formatLkr } from "@/lib/currency";
 import { useAppSession } from "@/stores/appSession";
@@ -15,6 +15,7 @@ export default function StockScreen() {
   const [items, setItems] = useState<Product[]>([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -28,11 +29,11 @@ export default function StockScreen() {
     setError(null);
 
     try {
-      const nextItems = await listLocalProducts(shopId);
+      const nextItems = await listProducts(shopId);
       setItems(nextItems);
     } catch (loadError) {
-      console.error("load local products failed", loadError);
-      setError("Could not load local stock.");
+      console.error("load products failed", loadError);
+      setError("Could not load stock.");
     } finally {
       setIsLoading(false);
     }
@@ -48,15 +49,24 @@ export default function StockScreen() {
       return;
     }
 
-    await addLocalProduct(shopId, {
+    setError(null);
+    const stockQty = Number(stock);
+    const { error: addError } = await addProduct(shopId, {
       name: name.trim(),
       sellPrice,
-      stockQty: 0,
+      stockQty: Number.isFinite(stockQty) ? stockQty : 0,
       vatInclusive: true,
     });
 
+    if (addError) {
+      console.error("add product failed", addError);
+      setError("Could not save product.");
+      return;
+    }
+
     setName("");
     setPrice("");
+    setStock("");
     await loadProducts();
   }
 
@@ -71,7 +81,7 @@ export default function StockScreen() {
             <Text className="text-sm font-black uppercase tracking-[4px] text-salli-teal">Stock</Text>
             <Text className="mt-2 text-4xl font-black text-salli-text">Products and stock</Text>
             <Text className="mt-3 text-base leading-7 text-salli-muted">
-              Local stock updates instantly from confirmed supplier bills, then syncs when the shop is online.
+              Add products to your shop catalogue. Items are saved to your shop and used for billing and VAT.
             </Text>
           </View>
 
@@ -95,26 +105,36 @@ export default function StockScreen() {
                 placeholderTextColor="#64748B"
                 className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
               />
-              <TextInput
-                value={price}
-                onChangeText={setPrice}
-                keyboardType="decimal-pad"
-                placeholder="Sell price"
-                placeholderTextColor="#64748B"
-                className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
-              />
+              <View className="flex-row gap-3">
+                <TextInput
+                  value={price}
+                  onChangeText={setPrice}
+                  keyboardType="decimal-pad"
+                  placeholder="Sell price"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+                <TextInput
+                  value={stock}
+                  onChangeText={setStock}
+                  keyboardType="decimal-pad"
+                  placeholder="Opening stock"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+              </View>
               <PremiumButton onPress={addItem}>Add product</PremiumButton>
             </View>
           </PremiumCard>
 
           {error ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{error}</Text> : null}
-          {isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading local stock...</Text> : null}
+          {isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading stock...</Text> : null}
 
-          <PremiumCard eyebrow="Inventory" title="Local stock ledger" description={`${lowStockCount} items at or below reorder level.`} tone="slate">
+          <PremiumCard eyebrow="Inventory" title="Stock ledger" description={`${lowStockCount} items at or below reorder level.`} tone="slate">
             <View className="gap-3">
               {!isLoading && items.length === 0 ? (
                 <Text className="rounded-2xl bg-slate-950/50 p-4 text-base leading-6 text-salli-muted">
-                  No local products yet. Scan a supplier bill or add a product manually.
+                  No products yet. Add your first product above.
                 </Text>
               ) : null}
 
@@ -134,7 +154,7 @@ export default function StockScreen() {
                         <Text className="text-sm text-salli-muted">in stock</Text>
                       </View>
                     </View>
-                    <Text className="mt-3 text-sm font-bold text-salli-muted">Updated offline • Ready for sync</Text>
+                    <Text className="mt-3 text-sm font-bold text-salli-muted">Saved to your shop</Text>
                   </View>
                 );
               })}

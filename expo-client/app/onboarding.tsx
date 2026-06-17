@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { Pressable, Text, TextInput, View } from "react-native";
+import { useRouter } from "expo-router";
 
 import { Screen } from "@/components/ui/Screen";
 import { createShop } from "@/features/onboarding/onboardingApi";
 
 export default function OnboardingScreen() {
+  const router = useRouter();
   const [name, setName] = useState("");
   const [vatNumber, setVatNumber] = useState("");
   const [language, setLanguage] = useState<"en" | "si" | "ta">("en");
@@ -29,7 +31,8 @@ export default function OnboardingScreen() {
       return;
     }
 
-    setMessage("Shop created. Route guard will send you to Home.");
+    setMessage("Shop created. Taking you to Home...");
+    router.replace("/");
   }
 
   return (
