@@ -58,8 +58,10 @@ See `README.md` and `docs/` for product/architecture context.
 
 ### Supabase backend
 - Migrations live in `supabase/migrations/` and must be applied in order: `001` (schema),
-  `002` (RLS), `003` (onboarding RPC). The app's `EXPO_PUBLIC_SUPABASE_URL`/`ANON_KEY` point at
-  the project; the same values must be set in the Vercel project env.
+  `002` (RLS), `003` (onboarding RPC `create_tenant_with_owner`), `004` (`record_sale` RPC:
+  atomic sale + stock decrement, authorized for any tenant member). The app's
+  `EXPO_PUBLIC_SUPABASE_URL`/`ANON_KEY` point at the project; the same values must be set in the
+  Vercel project env.
 - Applying migrations from this VM: connect via the Supabase **pooler** (host
   `*.pooler.supabase.com`, port `6543`). The direct host (`db.<ref>.supabase.co:5432`) is
   IPv6-only and unreachable from the VM. There is no `psql`; use Node `pg`.
@@ -76,3 +78,7 @@ See `README.md` and `docs/` for product/architecture context.
 ### Known gotchas
 - NativeWind on the **dev server** can show a brief unstyled first paint (FOUC) that a refresh
   fixes; the static export (`npx expo export`) inlines the CSS so production is styled on first load.
+- Screen recordings of the data-fetching screens (`/sell`, `/sell/cart`, `/vat`) often capture
+  dark/unstyled intermediate frames during navigation + async load, even though the screens
+  render fine for a real user. Prefer post-load screenshots + a DB check over video to verify
+  those flows.
