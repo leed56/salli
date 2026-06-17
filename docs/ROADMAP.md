@@ -74,9 +74,9 @@ Goal: a grocery/general shop can run its whole day on Salli, with VAT always cor
 - `vat_rate_history` + `tax_categories` (fabric exclusion, zero-rated, financial services); VAT on/off per tenant.
 - Acceptance: rate/category changes reflected without code changes; non-VAT shops supported.
 
-### Sprint 1.10 — Supplier ledger  ⬜
-- Suppliers with balances; purchases on credit raise supplier balance; record payments.
-- Acceptance: supplier outstanding tracked and settleable (mirror of credit book).
+### Sprint 1.10 — Supplier ledger  ✅
+- `/suppliers`: add suppliers, balances, record payments; supplier bills can link a supplier and "pay later" to raise the balance (`record_purchase` `007`).
+- Acceptance: supplier outstanding tracked and settleable (mirror of credit book). ✅
 
 ### Sprint 1.11 — Subscription gating & roles polish  🟡
 - Enforce plan feature gates + cashier role in UI (RLS already partial). Plans: free/standard/pro.
@@ -165,10 +165,10 @@ Goal: one codebase reshapes per vertical via `tenants.business_mode` + `business
 ## Current snapshot
 
 Done: Phase 0 (all), Phase 1 sprints 1.1–1.8 (catalogue, sales+stock-out, bills+stock-in,
-customers/credit, day close, live cockpit, expenses+expense VAT, owner reports). The full retail
-money + VAT (output − input − expense) + inventory loop runs end-to-end on the live app against
-the real Supabase backend.
+customers/credit, day close, live cockpit, expenses+expense VAT, owner reports, supplier ledger).
+The full retail money + VAT (output − input − expense) + inventory + customer/supplier ledgers
+run end-to-end on the live app against the real Supabase backend.
 
-Recommended next: 1.9 Configurable VAT → 1.10 Supplier ledger →
+Recommended next: 1.9 Configurable VAT →
 1.11 gating/roles, then the premium layers (1.12 AI capture, 1.13 i18n, 1.14 WhatsApp,
 1.15 print/scan, 1.16 offline, 1.17 packaging) to complete a premium MVP before Phase 2+.

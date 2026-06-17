@@ -52,16 +52,19 @@ export function computePurchaseTotals(lines: PurchaseLineInput[]): PurchaseTotal
 
 export async function createPurchase(
   shopId: string,
-  draft: { supplierName: string; lines: PurchaseLineInput[] },
+  draft: { supplierName: string; supplierId?: string | null; onCredit?: boolean; lines: PurchaseLineInput[] },
 ) {
   const computed = draft.lines.map(computeLine);
   const totals = computePurchaseTotals(draft.lines);
 
-  // Recorded via a SECURITY DEFINER RPC so the purchase, its items, and product
-  // stock increases (matching/creating products by name) happen atomically.
+  // Recorded via a SECURITY DEFINER RPC so the purchase, its items, product
+  // stock increases (matching/creating products by name), and (on credit) the
+  // supplier balance update happen atomically.
   const { data, error } = await supabaseClient.rpc("record_purchase", {
     p_tenant_id: shopId,
     p_supplier_name: draft.supplierName,
+    p_supplier_id: draft.supplierId ?? null,
+    p_on_credit: draft.onCredit ?? false,
     p_subtotal: totals.subtotal,
     p_vat_amount: totals.vatAmount,
     p_total: totals.total,

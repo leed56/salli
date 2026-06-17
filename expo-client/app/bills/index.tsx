@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { router } from "expo-router";
-import { Text, TextInput, View } from "react-native";
+import { Pressable, Text, TextInput, View } from "react-native";
 
 import { AuthGate } from "@/components/auth/AuthGate";
 import { PremiumButton } from "@/components/ui/PremiumButton";
@@ -11,18 +11,35 @@ import {
   createPurchase,
   type PurchaseLineInput,
 } from "@/features/bills/supabasePurchaseRepository";
+import { listSuppliers, type Supplier } from "@/features/suppliers/supplierRepository";
 import { formatLkr } from "@/lib/currency";
 import { useAppSession } from "@/stores/appSession";
 
 export default function SupplierBillsScreen() {
   const { shopId } = useAppSession();
   const [supplier, setSupplier] = useState("");
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [supplierId, setSupplierId] = useState<string | null>(null);
+  const [onCredit, setOnCredit] = useState(false);
   const [name, setName] = useState("");
   const [qty, setQty] = useState("1");
   const [cost, setCost] = useState("");
   const [lines, setLines] = useState<PurchaseLineInput[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    if (!shopId) return;
+    listSuppliers(shopId)
+      .then((next) => {
+        if (active) setSuppliers(next);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [shopId]);
 
   const totals = computePurchaseTotals(lines);
 
@@ -47,7 +64,13 @@ export default function SupplierBillsScreen() {
     setIsSubmitting(true);
     setMessage(null);
 
-    const { error } = await createPurchase(shopId, { supplierName: supplier.trim(), lines });
+    const linked = suppliers.find((item) => item.id === supplierId);
+    const { error } = await createPurchase(shopId, {
+      supplierName: linked?.name ?? supplier.trim(),
+      supplierId,
+      onCredit: onCredit && !!supplierId,
+      lines,
+    });
 
     setIsSubmitting(false);
 
@@ -58,6 +81,8 @@ export default function SupplierBillsScreen() {
 
     setLines([]);
     setSupplier("");
+    setSupplierId(null);
+    setOnCredit(false);
     router.replace("/vat");
   }
 
@@ -78,10 +103,48 @@ export default function SupplierBillsScreen() {
               <TextInput
                 value={supplier}
                 onChangeText={setSupplier}
+                editable={!supplierId}
                 placeholder="Supplier name"
                 placeholderTextColor="#64748B"
                 className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
               />
+
+              {suppliers.length > 0 ? (
+                <View className="gap-2">
+                  <Text className="text-sm font-semibold text-salli-muted">Link to a supplier (for credit)</Text>
+                  <View className="flex-row flex-wrap gap-2">
+                    {suppliers.map((item) => {
+                      const selected = item.id === supplierId;
+                      return (
+                        <Pressable
+                          key={item.id}
+                          onPress={() => {
+                            const next = selected ? null : item.id;
+                            setSupplierId(next);
+                            if (next) setSupplier(item.name);
+                            else setOnCredit(false);
+                          }}
+                          className={`rounded-2xl px-4 py-2 ${selected ? "bg-salli-teal" : "bg-slate-950"}`}
+                        >
+                          <Text className={selected ? "font-bold text-slate-950" : "text-salli-text"}>{item.name}</Text>
+                        </Pressable>
+                      );
+                    })}
+                  </View>
+                  {supplierId ? (
+                    <Pressable
+                      onPress={() => setOnCredit((value) => !value)}
+                      className="min-h-14 flex-row items-center justify-between rounded-2xl bg-slate-950 px-4"
+                    >
+                      <Text className="text-base text-salli-text">Pay later (add to supplier balance)</Text>
+                      <View className={`h-7 w-12 justify-center rounded-full px-1 ${onCredit ? "bg-salli-teal" : "bg-slate-700"}`}>
+                        <View className={`h-5 w-5 rounded-full bg-white ${onCredit ? "self-end" : "self-start"}`} />
+                      </View>
+                    </Pressable>
+                  ) : null}
+                </View>
+              ) : null}
+
               <TextInput
                 value={name}
                 onChangeText={setName}
