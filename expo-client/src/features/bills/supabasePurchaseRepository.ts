@@ -57,41 +57,26 @@ export async function createPurchase(
   const computed = draft.lines.map(computeLine);
   const totals = computePurchaseTotals(draft.lines);
 
-  const purchaseResult = await supabaseClient
-    .from("purchases")
-    .insert({
-      tenant_id: shopId,
-      supplier_name: draft.supplierName || null,
-      status: "confirmed",
-      subtotal: totals.subtotal,
-      vat_amount: totals.vatAmount,
-      total: totals.total,
-      confirmed_at: new Date().toISOString(),
-    })
-    .select("id")
-    .single();
+  // Recorded via a SECURITY DEFINER RPC so the purchase, its items, and product
+  // stock increases (matching/creating products by name) happen atomically.
+  const { data, error } = await supabaseClient.rpc("record_purchase", {
+    p_tenant_id: shopId,
+    p_supplier_name: draft.supplierName,
+    p_subtotal: totals.subtotal,
+    p_vat_amount: totals.vatAmount,
+    p_total: totals.total,
+    p_items: computed.map((line) => ({
+      name: line.name,
+      qty: line.qty,
+      unit_cost: line.unit_cost,
+      vat_amount: line.vat_amount,
+      line_total: line.line_total,
+    })),
+  });
 
-  if (purchaseResult.error || !purchaseResult.data) {
-    return { error: purchaseResult.error ?? new Error("Could not save supplier bill.") };
+  if (error) {
+    return { error };
   }
 
-  const purchaseId = purchaseResult.data.id as string;
-
-  const itemRows = computed.map((line) => ({
-    tenant_id: shopId,
-    purchase_id: purchaseId,
-    name: line.name,
-    qty: line.qty,
-    unit_cost: line.unit_cost,
-    vat_amount: line.vat_amount,
-    line_total: line.line_total,
-  }));
-
-  const itemsResult = await supabaseClient.from("purchase_items").insert(itemRows);
-
-  if (itemsResult.error) {
-    return { error: itemsResult.error };
-  }
-
-  return { data: { purchaseId, vatAmount: totals.vatAmount } };
+  return { data: { purchaseId: data as string, vatAmount: totals.vatAmount } };
 }
