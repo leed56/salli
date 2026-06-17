@@ -102,8 +102,8 @@ export default function VatScreen() {
                     <Text className="text-base leading-6 text-salli-muted">VAT paid on supplier bills. This reduces the amount payable.</Text>
                   </PremiumCard>
 
-                  <PremiumCard eyebrow="Expenses" title={formatLkr(summary.expenseVat)} description="Expense VAT is reserved for the next slice." tone="slate">
-                    <Text className="text-base leading-6 text-salli-muted">Expense capture is not connected yet, so this is currently zero.</Text>
+                  <PremiumCard eyebrow="Expenses" title={formatLkr(summary.expenseVat)} description="Claimable VAT from recorded expenses." tone="slate">
+                    <Text className="text-base leading-6 text-salli-muted">VAT on VAT-claimable expenses. This also reduces the amount payable.</Text>
                   </PremiumCard>
                 </View>
 
