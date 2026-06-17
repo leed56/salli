@@ -13,10 +13,11 @@ import {
 } from "@/features/bills/supabasePurchaseRepository";
 import { listSuppliers, type Supplier } from "@/features/suppliers/supplierRepository";
 import { formatLkr } from "@/lib/currency";
-import { useAppSession } from "@/stores/appSession";
+import { effectiveVatRate, useAppSession } from "@/stores/appSession";
 
 export default function SupplierBillsScreen() {
-  const { shopId } = useAppSession();
+  const { shopId, vatEnabled, vatRate } = useAppSession();
+  const rate = effectiveVatRate({ vatEnabled, vatRate });
   const [supplier, setSupplier] = useState("");
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [supplierId, setSupplierId] = useState<string | null>(null);
@@ -41,7 +42,7 @@ export default function SupplierBillsScreen() {
     };
   }, [shopId]);
 
-  const totals = computePurchaseTotals(lines);
+  const totals = computePurchaseTotals(lines, rate);
 
   function addLine() {
     const qtyValue = Number(qty);
@@ -70,6 +71,7 @@ export default function SupplierBillsScreen() {
       supplierId,
       onCredit: onCredit && !!supplierId,
       lines,
+      rate,
     });
 
     setIsSubmitting(false);

@@ -6,17 +6,19 @@ import type { CartItem } from "./types";
 export const VAT_RATE = 0.18;
 
 /**
- * Builds a cart line for a catalogue product, computing the VAT portion.
- * Prices are treated as VAT-inclusive unless the product is flagged otherwise.
+ * Builds a cart line for a catalogue product, computing the VAT portion at the
+ * given rate (0 when VAT is disabled for the shop). Prices are treated as
+ * VAT-inclusive unless the product is flagged otherwise.
  */
 export function buildCartItem(
   product: { id: string; name: string; sellPrice: number; vatInclusive: boolean },
   qty = 1,
+  rate = VAT_RATE,
 ): CartItem {
   const gross = product.sellPrice * qty;
   const vatAmount = product.vatInclusive
-    ? gross * (VAT_RATE / (1 + VAT_RATE))
-    : gross * VAT_RATE;
+    ? gross * (rate / (1 + rate))
+    : gross * rate;
   const lineTotal = product.vatInclusive ? gross : gross + vatAmount;
 
   return {

@@ -36,6 +36,8 @@ export function SessionSync() {
             shopId: membership.shopId,
             role: membership.role,
             plan: membership.plan,
+            vatEnabled: membership.vatEnabled,
+            vatRate: membership.vatRate,
             setupDone: true,
             hydrated: true,
           });

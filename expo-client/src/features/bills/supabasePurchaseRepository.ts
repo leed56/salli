@@ -23,10 +23,10 @@ type ComputedLine = {
 };
 
 // Treats unit costs as VAT-inclusive (consistent with the sales side) and derives
-// the input VAT portion at the standard rate.
-function computeLine(line: PurchaseLineInput): ComputedLine {
+// the input VAT portion at the given rate (0 when VAT is disabled for the shop).
+function computeLine(line: PurchaseLineInput, rate = VAT_RATE): ComputedLine {
   const gross = line.unitCost * line.qty;
-  const vatAmount = gross * (VAT_RATE / (1 + VAT_RATE));
+  const vatAmount = gross * (rate / (1 + rate));
   return {
     name: line.name,
     qty: line.qty,
@@ -36,10 +36,10 @@ function computeLine(line: PurchaseLineInput): ComputedLine {
   };
 }
 
-export function computePurchaseTotals(lines: PurchaseLineInput[]): PurchaseTotals {
+export function computePurchaseTotals(lines: PurchaseLineInput[], rate = VAT_RATE): PurchaseTotals {
   return lines.reduce<PurchaseTotals>(
     (totals, line) => {
-      const computed = computeLine(line);
+      const computed = computeLine(line, rate);
       return {
         subtotal: totals.subtotal + (computed.line_total - computed.vat_amount),
         vatAmount: totals.vatAmount + computed.vat_amount,
@@ -52,10 +52,11 @@ export function computePurchaseTotals(lines: PurchaseLineInput[]): PurchaseTotal
 
 export async function createPurchase(
   shopId: string,
-  draft: { supplierName: string; supplierId?: string | null; onCredit?: boolean; lines: PurchaseLineInput[] },
+  draft: { supplierName: string; supplierId?: string | null; onCredit?: boolean; lines: PurchaseLineInput[]; rate?: number },
 ) {
-  const computed = draft.lines.map(computeLine);
-  const totals = computePurchaseTotals(draft.lines);
+  const rate = draft.rate ?? VAT_RATE;
+  const computed = draft.lines.map((line) => computeLine(line, rate));
+  const totals = computePurchaseTotals(draft.lines, rate);
 
   // Recorded via a SECURITY DEFINER RPC so the purchase, its items, product
   // stock increases (matching/creating products by name), and (on credit) the

@@ -26,13 +26,13 @@ function formatUpdatedAt(value: string) {
 }
 
 export default function VatScreen() {
-  const { shopId } = useAppSession();
+  const { shopId, vatEnabled } = useAppSession();
   const [summary, setSummary] = useState<VatMeterSummary | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   async function loadSummary() {
-    if (!shopId) {
+    if (!shopId || !vatEnabled) {
       setIsLoading(false);
       return;
     }
@@ -53,7 +53,7 @@ export default function VatScreen() {
 
   useEffect(() => {
     loadSummary();
-  }, [shopId]);
+  }, [shopId, vatEnabled]);
 
   const confidenceLabel = summary && summary.purchaseCount > 0 ? "Good" : "Needs supplier bills";
   const confidenceCopy = summary && summary.purchaseCount > 0
@@ -73,10 +73,18 @@ export default function VatScreen() {
               </Text>
             </View>
 
-            {error ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{error}</Text> : null}
-            {isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading VAT...</Text> : null}
+            {!vatEnabled ? (
+              <PremiumCard eyebrow="VAT off" title="VAT is turned off" description="This shop is not VAT-registered." tone="slate">
+                <Text className="text-base leading-6 text-salli-muted">
+                  Sales, supplier bills, and expenses are recorded without VAT. Turn VAT on in Settings when you register.
+                </Text>
+              </PremiumCard>
+            ) : null}
 
-            {summary ? (
+            {vatEnabled && error ? <Text className="rounded-2xl bg-salli-rose/10 p-4 text-base font-bold text-salli-text">{error}</Text> : null}
+            {vatEnabled && isLoading ? <Text className="rounded-2xl bg-salli-card p-4 text-base font-bold text-salli-muted">Loading VAT...</Text> : null}
+
+            {vatEnabled && summary ? (
               <>
                 <PremiumCard eyebrow={summary.period.label} title={formatLkr(summary.netPayable)} description="Estimated VAT payable for the current quarter." tone={summary.netPayable > 0 ? "amber" : "teal"}>
                   <View className="gap-4">

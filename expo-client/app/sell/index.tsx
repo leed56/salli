@@ -8,11 +8,12 @@ import { listProducts } from "@/features/products/productRepository";
 import { buildCartItem } from "@/features/sales/saleRepository";
 import type { Product } from "@/features/products/types";
 import { formatLkr } from "@/lib/currency";
-import { useAppSession } from "@/stores/appSession";
+import { effectiveVatRate, useAppSession } from "@/stores/appSession";
 import { useCartStore } from "@/stores/cartStore";
 
 export default function SellScreen() {
-  const { shopId } = useAppSession();
+  const { shopId, vatEnabled, vatRate } = useAppSession();
+  const rate = effectiveVatRate({ vatEnabled, vatRate });
   const { items, totals, addItem, removeItem } = useCartStore();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,7 +61,7 @@ export default function SellScreen() {
               products.map((product) => (
                 <Pressable
                   key={product.id}
-                  onPress={() => addItem(buildCartItem(product))}
+                  onPress={() => addItem(buildCartItem(product, 1, rate))}
                   className="min-h-16 rounded-3xl bg-salli-card p-5"
                 >
                   <Text className="text-xl font-bold text-salli-text">{product.name}</Text>

@@ -7,12 +7,13 @@ import { PremiumCard } from "@/components/ui/PremiumCard";
 import { Screen } from "@/components/ui/Screen";
 import { addExpense, listExpenses, type Expense } from "@/features/expenses/expenseRepository";
 import { formatLkr } from "@/lib/currency";
-import { useAppSession } from "@/stores/appSession";
+import { effectiveVatRate, useAppSession } from "@/stores/appSession";
 
 const CATEGORIES = ["Rent", "Utilities", "Transport", "Supplies", "Salaries", "Other"];
 
 export default function ExpensesScreen() {
-  const { shopId } = useAppSession();
+  const { shopId, vatEnabled, vatRate } = useAppSession();
+  const rate = effectiveVatRate({ vatEnabled, vatRate });
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [category, setCategory] = useState("Rent");
   const [amount, setAmount] = useState("");
@@ -51,6 +52,7 @@ export default function ExpensesScreen() {
       category: category.trim(),
       amount: amountValue,
       vatClaimable,
+      rate,
     });
     if (addError) {
       setError("Could not save expense.");

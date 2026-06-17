@@ -70,9 +70,11 @@ Goal: a grocery/general shop can run its whole day on Salli, with VAT always cor
 - `/reports`: quarter sales (cash/credit), output/input/expense/net VAT, gross profit (COGS via product cost), purchases, expenses, credit outstanding.
 - Acceptance: period summary matches underlying records. ✅
 
-### Sprint 1.9 — Configurable VAT engine  ⬜
-- `vat_rate_history` + `tax_categories` (fabric exclusion, zero-rated, financial services); VAT on/off per tenant.
-- Acceptance: rate/category changes reflected without code changes; non-VAT shops supported.
+### Sprint 1.9 — Configurable VAT engine  🟡
+- Done: VAT on/off per tenant + configurable rate (`tenants.vat_enabled`/`vat_rate`, migration 008),
+  threaded through sales/bills/expenses; Settings screen; VAT-off state on the meter.
+- Pending: `vat_rate_history` + `tax_categories` (fabric exclusion, zero-rated, financial services).
+- Acceptance (done): VAT toggle + rate change reflected without code changes; non-VAT shops supported. ✅
 
 ### Sprint 1.10 — Supplier ledger  ✅
 - `/suppliers`: add suppliers, balances, record payments; supplier bills can link a supplier and "pay later" to raise the balance (`record_purchase` `007`).

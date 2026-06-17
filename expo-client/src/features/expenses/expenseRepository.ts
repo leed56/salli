@@ -47,10 +47,12 @@ export async function listExpenses(shopId: string): Promise<Expense[]> {
 
 export async function addExpense(
   shopId: string,
-  input: { category: string; amount: number; note?: string; vatClaimable: boolean },
+  input: { category: string; amount: number; note?: string; vatClaimable: boolean; rate?: number },
 ) {
-  // Claimable expense VAT is the VAT-inclusive portion of the amount; otherwise 0.
-  const vatAmount = input.vatClaimable ? input.amount * (VAT_RATE / (1 + VAT_RATE)) : 0;
+  // Claimable expense VAT is the VAT-inclusive portion of the amount at the
+  // given rate (0 when VAT is disabled); otherwise 0.
+  const rate = input.rate ?? VAT_RATE;
+  const vatAmount = input.vatClaimable ? input.amount * (rate / (1 + rate)) : 0;
 
   return supabaseClient.from("expenses").insert({
     tenant_id: shopId,
