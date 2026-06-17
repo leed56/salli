@@ -66,9 +66,9 @@ Goal: a grocery/general shop can run its whole day on Salli, with VAT always cor
 - `/expenses`: capture expenses (category, amount, VAT-claimable toggle); feeds the VAT meter's expense-VAT slot.
 - Acceptance: expense VAT reduces net payable; expenses listed. ✅
 
-### Sprint 1.8 — Reports (owner)  ⬜  (pro-gated)
-- `/reports`: period sales, output/input/net VAT, gross profit (COGS via product cost), credit outstanding.
-- Acceptance: period summary matches underlying records.
+### Sprint 1.8 — Reports (owner)  ✅  (pro-gated)
+- `/reports`: quarter sales (cash/credit), output/input/expense/net VAT, gross profit (COGS via product cost), purchases, expenses, credit outstanding.
+- Acceptance: period summary matches underlying records. ✅
 
 ### Sprint 1.9 — Configurable VAT engine  ⬜
 - `vat_rate_history` + `tax_categories` (fabric exclusion, zero-rated, financial services); VAT on/off per tenant.
@@ -164,11 +164,11 @@ Goal: one codebase reshapes per vertical via `tenants.business_mode` + `business
 
 ## Current snapshot
 
-Done: Phase 0 (all), Phase 1 sprints 1.1–1.7 (catalogue, sales+stock-out, bills+stock-in,
-customers/credit, day close, live cockpit, expenses+expense VAT). The full retail money + VAT
-(output − input − expense) + inventory loop runs end-to-end on the live app against the real
-Supabase backend.
+Done: Phase 0 (all), Phase 1 sprints 1.1–1.8 (catalogue, sales+stock-out, bills+stock-in,
+customers/credit, day close, live cockpit, expenses+expense VAT, owner reports). The full retail
+money + VAT (output − input − expense) + inventory loop runs end-to-end on the live app against
+the real Supabase backend.
 
-Recommended next: 1.8 Reports → 1.9 Configurable VAT → 1.10 Supplier ledger →
+Recommended next: 1.9 Configurable VAT → 1.10 Supplier ledger →
 1.11 gating/roles, then the premium layers (1.12 AI capture, 1.13 i18n, 1.14 WhatsApp,
 1.15 print/scan, 1.16 offline, 1.17 packaging) to complete a premium MVP before Phase 2+.
