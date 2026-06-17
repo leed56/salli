@@ -35,40 +35,28 @@ export async function createSale(
 ) {
   const totals = calculateSaleTotals(draft.items);
 
-  const saleResult = await supabaseClient
-    .from("sales")
-    .insert({
-      tenant_id: shopId,
-      payment_type: draft.paymentType,
-      subtotal: totals.subtotal,
-      vat_amount: totals.vatAmount,
-      total: totals.total,
-    })
-    .select("id")
-    .single();
+  // Recorded via a SECURITY DEFINER RPC so the sale, its items, and product
+  // stock decrements happen atomically (and so cashiers, who cannot write the
+  // owner-only products table directly, can still record sales).
+  const { data, error } = await supabaseClient.rpc("record_sale", {
+    p_tenant_id: shopId,
+    p_payment_type: draft.paymentType,
+    p_subtotal: totals.subtotal,
+    p_vat_amount: totals.vatAmount,
+    p_total: totals.total,
+    p_items: draft.items.map((item) => ({
+      product_id: item.productId,
+      name: item.name,
+      qty: item.qty,
+      unit_price: item.unitPrice,
+      vat_amount: item.vatAmount,
+      line_total: item.lineTotal,
+    })),
+  });
 
-  if (saleResult.error || !saleResult.data) {
-    return { error: saleResult.error ?? new Error("Could not create sale.") };
+  if (error) {
+    return { error };
   }
 
-  const saleId = saleResult.data.id as string;
-
-  const itemRows = draft.items.map((item) => ({
-    tenant_id: shopId,
-    sale_id: saleId,
-    product_id: item.productId,
-    name: item.name,
-    qty: item.qty,
-    unit_price: item.unitPrice,
-    vat_amount: item.vatAmount,
-    line_total: item.lineTotal,
-  }));
-
-  const itemsResult = await supabaseClient.from("sale_items").insert(itemRows);
-
-  if (itemsResult.error) {
-    return { error: itemsResult.error };
-  }
-
-  return { data: { saleId, total: totals.total } };
+  return { data: { saleId: data as string, total: totals.total } };
 }

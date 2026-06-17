@@ -15,6 +15,7 @@ export default function StockScreen() {
   const [items, setItems] = useState<Product[]>([]);
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
+  const [stock, setStock] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -49,10 +50,11 @@ export default function StockScreen() {
     }
 
     setError(null);
+    const stockQty = Number(stock);
     const { error: addError } = await addProduct(shopId, {
       name: name.trim(),
       sellPrice,
-      stockQty: 0,
+      stockQty: Number.isFinite(stockQty) ? stockQty : 0,
       vatInclusive: true,
     });
 
@@ -64,6 +66,7 @@ export default function StockScreen() {
 
     setName("");
     setPrice("");
+    setStock("");
     await loadProducts();
   }
 
@@ -102,14 +105,24 @@ export default function StockScreen() {
                 placeholderTextColor="#64748B"
                 className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
               />
-              <TextInput
-                value={price}
-                onChangeText={setPrice}
-                keyboardType="decimal-pad"
-                placeholder="Sell price"
-                placeholderTextColor="#64748B"
-                className="min-h-14 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
-              />
+              <View className="flex-row gap-3">
+                <TextInput
+                  value={price}
+                  onChangeText={setPrice}
+                  keyboardType="decimal-pad"
+                  placeholder="Sell price"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+                <TextInput
+                  value={stock}
+                  onChangeText={setStock}
+                  keyboardType="decimal-pad"
+                  placeholder="Opening stock"
+                  placeholderTextColor="#64748B"
+                  className="min-h-14 flex-1 rounded-2xl bg-slate-950 px-4 text-lg text-salli-text"
+                />
+              </View>
               <PremiumButton onPress={addItem}>Add product</PremiumButton>
             </View>
           </PremiumCard>
